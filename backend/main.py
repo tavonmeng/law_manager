@@ -114,7 +114,7 @@ def parse_issues_from_report(report_text: str) -> List[IssueItem]:
             elif stripped.startswith("**法律依据**") or stripped.startswith("**第二点"):
                 current_field = "law"
                 law = stripped.split("**", 3)[-1].strip().lstrip("：:").strip()
-            elif stripped.startswith("**投资人建议**") or stripped.startswith("**第三点"):
+            elif stripped.startswith("**风险评估与投资人建议**") or stripped.startswith("**投资人建议**") or stripped.startswith("**第三点"):
                 current_field = "suggestion"
                 suggestion = stripped.split("**", 3)[-1].strip().lstrip("：:").strip()
             elif current_field and stripped:
