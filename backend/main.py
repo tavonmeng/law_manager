@@ -13,7 +13,9 @@ except ModuleNotFoundError:
     from workflow import build_graph
 
 # ─── 数据库 ───────────────────────────────────────────────────
-DATABASE_URL = "sqlite:///./test_records.db"
+import os
+db_path = os.environ.get("DATABASE_PATH", "./test_records.db")
+DATABASE_URL = f"sqlite:///{db_path}"
 engine = create_engine(DATABASE_URL, echo=False)
 
 

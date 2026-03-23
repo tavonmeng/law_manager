@@ -9,10 +9,10 @@ services:
       - "8000:8000"
     volumes:
       - db_data:/app/data
-    working_dir: /app/data
     restart: always
     environment:
       - TZ=Asia/Shanghai
+      - DATABASE_PATH=/app/data/test_records.db
 
   frontend:
     build:
