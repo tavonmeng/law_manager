@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import pandas as pd
 import requests
@@ -22,7 +23,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = os.environ.get("API_BASE_URL", "http://localhost:8000")
 
 
 def markdown_to_df(md_text: str) -> pd.DataFrame:

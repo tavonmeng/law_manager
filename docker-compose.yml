@@ -7,6 +7,9 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    volumes:
+      - db_data:/app/data
+    working_dir: /app/data
     restart: always
     environment:
       - TZ=Asia/Shanghai
@@ -19,6 +22,10 @@ services:
       - "8501:8501"
     environment:
       - TZ=Asia/Shanghai
+      - API_BASE_URL=http://backend:8000
     depends_on:
       - backend
     restart: always
+
+volumes:
+  db_data:
