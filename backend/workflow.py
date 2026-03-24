@@ -53,7 +53,7 @@ def analyze_data_node(state: AgentState):
 重要：如果所提供的材料不足以支撑对某个要点的判断，请直接说明"本项所提供材料不足以判断，需补充[具体所需数据]"，不得在缺乏数据依据的情况下进行推测或臆断。"""
 
     human_msg = HumanMessage(
-        content=f"目标公司数据如下：\n{table_data}\n\n请逐条核查并出具判断。"
+        content=f"目标公司提供的尽调材料（含数据表格及可能的补充说明）如下：\n{table_data}\n\n请结合全部材料内容，逐条核查并出具判断。"
     )
     response = llm.invoke([SystemMessage(content=system_prompt), human_msg])
     return {"analysis_reasoning": response.content}
