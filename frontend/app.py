@@ -170,27 +170,19 @@ if "新建" in page:
         evaluations_dict = {}
         
         for i, iss in enumerate(issues):
-            st.markdown(f"""
-            <div class="issue-card">
-                <div class="issue-title">🔴 风险项 #{i+1}：{iss['title']}</div>
+            with st.container(border=True):
+                st.subheader(f"🔴 风险项 #{i+1}：{iss['title']}")
                 
-                <div class="issue-label">事实认定</div>
-                <div class="issue-content">{iss['fact']}</div>
+                st.markdown("**📌 事实认定**")
+                st.write(iss['fact'])
                 
-                <div class="issue-label">法律依据</div>
-                <div class="issue-content">{iss['law']}</div>
+                st.markdown("**⚖️ 法律依据**")
+                st.info(iss['law'])
                 
-                <div class="advise-box">
-                    <div class="issue-label" style="margin-top: 0; color: #60a5fa;">投资人风险评估与建议</div>
-                    <div class="issue-content" style="margin-bottom: 0; color: #bfdbfe;">
-                        {iss['suggestion'].replace(chr(10), '<br>')}
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-            # --- 下方放对应的人工评测表单 ---
-            with st.container():
+                st.markdown("**💼 风险评估与投资人建议**")
+                st.warning(iss['suggestion'])
+                
+                st.divider()
                 ecol1, ecol2 = st.columns(2)
                 with ecol1:
                     exp_val = st.text_area("期待标准答案 ✏️", key=f"exp_{i}", 
@@ -291,22 +283,21 @@ else:
                         evals_map = {e["issue_title"]: e for e in d["evaluations"]}
                         for i, iss in enumerate(d["issues"]):
                             ev = evals_map.get(iss["title"], {})
-                            st.markdown(f"""
-                            <div class="issue-card" style="margin-bottom: 5px;">
-                                <div class="issue-title" style="font-size:1.1rem;">🔴 {iss['title']}</div>
-                                <div class="issue-label">事实认定</div>
-                                <div class="issue-content">{iss['fact']}</div>
-                                <div class="issue-label">法律依据</div>
-                                <div class="issue-content">{iss['law']}</div>
-                                <div class="advise-box" style="padding: 0.8rem;">
-                                    <div class="issue-label" style="margin-top:0;">风险评估与投资人建议</div>
-                                    <div class="issue-content" style="margin-bottom:0;">{iss['suggestion'].replace(chr(10), '<br>')}</div>
-                                </div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            
-                            st.info(f"**期望答案:** {ev.get('expected_answer', '无')}\n\n**改进建议:** {ev.get('improvement_notes', '无')}")
-                            st.markdown("<hr style='margin: 1rem 0; opacity: 0.2'>", unsafe_allow_html=True)
+                            with st.container(border=True):
+                                st.subheader(f"🔴 风险项：{iss['title']}")
+                                
+                                st.markdown("**📌 事实认定**")
+                                st.write(iss['fact'])
+                                
+                                st.markdown("**⚖️ 法律依据**")
+                                st.info(iss['law'])
+                                
+                                st.markdown("**💼 风险评估与投资人建议**")
+                                st.warning(iss['suggestion'])
+                                
+                                st.divider()
+                                st.success(f"**期望答案:**\n{ev.get('expected_answer', '无')}\n\n**改进建议:**\n{ev.get('improvement_notes', '无')}")
+                            st.markdown("<br>", unsafe_allow_html=True)
                 
                 except Exception as e:
                     st.error(f"读取详情失败：{e}")
