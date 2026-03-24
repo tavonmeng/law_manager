@@ -194,3 +194,14 @@ async def get_record(record_id: int):
         issues=[IssueItem(**i) for i in json.loads(record.issues_json)],
         evaluations=[EvaluationItem(**e) for e in json.loads(record.evaluations_json)],
     )
+
+
+@app.delete("/api/records/{record_id}", response_model=dict)
+async def delete_record(record_id: int):
+    with Session(engine) as session:
+        record = session.get(TestRecord, record_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="记录不存在")
+        session.delete(record)
+        session.commit()
+    return {"success": True, "message": "删除成功"}

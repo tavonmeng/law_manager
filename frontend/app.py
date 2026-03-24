@@ -280,8 +280,18 @@ else:
                     res.raise_for_status()
                     d = res.json()
                     
-                    st.markdown(f"### 📋 评测记录 #{d['id']} 详情")
-                    st.caption(f"分析模块：**{d['module_name']}** | 创建时间：{d['created_at']}")
+                    col_title, col_del = st.columns([5, 1])
+                    with col_title:
+                        st.markdown(f"### 📋 评测记录 #{d['id']} 详情")
+                        st.caption(f"分析模块：**{d['module_name']}** | 创建时间：{d['created_at']}")
+                    with col_del:
+                        if st.button("🗑️ 删除该记录表", type="primary", use_container_width=True):
+                            try:
+                                requests.delete(f"{api_base}/api/records/{selected_id}", timeout=10).raise_for_status()
+                                st.success("已成功删除！")
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"删除失败：{e}")
                     
                     tab1, tab2, tab3 = st.tabs(["📊 原始业务数据", "🔍 尽调核查底稿", "⚖️ 法律意见与评测档案"])
                     
