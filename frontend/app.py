@@ -107,38 +107,51 @@ if "新建" in page:
     # ── 数据输入区 ──
     st.markdown("##### 📊 目标公司业务数据（支持混合输入）")
     
-    st.caption("1. 基础数据表格（可动态增减行列、直接编辑内容）")
-    default_data = {
-        "序号": [1, 2, 3, 4, 5, 6],
-        "险种": ["养老保险", "医疗保险", "失业保险", "工伤保险", "生育保险", "住房公积金"],
-        "实际缴费人数": [13, 13, 13, 13, 13, 12],
-        "签署劳动合同员工数": [15, 15, 15, 15, 15, 15],
-        "单位缴费基数": ["131300", "131300", "131300", "131300", "131300", "125300"],
-        "个人缴费基数": ["131300", "131300", "131300", "—", "—", "125300"],
-        "单位缴费比例": ["16%", "9%", "0.8%", "0.2%", "0.8%", "12%"],
-        "个人缴费比例": ["8%", "2% + 3", "0.2%", "—", "—", "12%"]
-    }
-    edited_df = st.data_editor(
-        pd.DataFrame(default_data), num_rows="dynamic",
-        use_container_width=True, key="input_table",
-        height=280
-    )
+    use_default_table = st.toggle("使用基础数据表格模板", value=True, help="如果您的业务数据表头与此不同，可关闭此项，直接在下方的文本框中粘贴您的 Excel 数据。")
+    
+    edited_df = None
+    if use_default_table:
+        st.caption("1. 基础数据表格（可动态增减行列、直接编辑内容）")
+        default_data = {
+            "序号": [1, 2, 3, 4, 5, 6],
+            "险种": ["养老保险", "医疗保险", "失业保险", "工伤保险", "生育保险", "住房公积金"],
+            "实际缴费人数": [13, 13, 13, 13, 13, 12],
+            "签署劳动合同员工数": [15, 15, 15, 15, 15, 15],
+            "单位缴费基数": ["131300", "131300", "131300", "131300", "131300", "125300"],
+            "个人缴费基数": ["131300", "131300", "131300", "—", "—", "125300"],
+            "单位缴费比例": ["16%", "9%", "0.8%", "0.2%", "0.8%", "12%"],
+            "个人缴费比例": ["8%", "2% + 3", "0.2%", "—", "—", "12%"]
+        }
+        edited_df = st.data_editor(
+            pd.DataFrame(default_data), num_rows="dynamic",
+            use_container_width=True, key="input_table",
+            height=280
+        )
+    else:
+        st.info("💡 基础数据表格已收起。大模型不会处理基础表格。请直接将您不同格式的 Excel / CSV / 文字等资料粘贴到下方的文本框中。")
 
-    st.caption("2. 补充说明材料（选填，其它相关的文字描述、额外表格等，支持 Markdown 格式）")
-    extra_context = st.text_area("补充材料文本框", label_visibility="collapsed", height=150, placeholder="由于Agent无法凭空核实一些前提条件，您可以将相关的补充性说明、额外的文字描述或访谈纪要粘贴到这里...")
+    st.caption("2. 补充说明材料（选填，支持直接从 Excel 复制粘贴新表格、输入补充性文字材料等）" if use_default_table else "补充材料文本框（必填，请粘贴业务资料）")
+    extra_context = st.text_area("补充材料文本框", label_visibility="collapsed", height=200, placeholder="💡 填报提示：\n1. 如果您关闭了基础数据表格，请直接将您的 Excel 或 Numbers 数据框选复制，并粘贴到这里（Agent 完全具备识别制表符格式表格的能力！）。\n2. 您也可以将相关的补充说明、额外的文字材料或约谈纪要随时粘贴到这里。")
 
     st.markdown("<br>", unsafe_allow_html=True)
     run_btn = st.button("🚀 运行 Agent 开始合规分析", type="primary", use_container_width=True)
 
     if run_btn:
+        if not use_default_table and not extra_context.strip():
+            st.error("您关闭了基础表格，请在下方补充材料框中输入业务数据后再运行分析！")
+            st.stop()
+            
         for k in ["issues", "reasoning", "input_data", "module_name"]:
             st.session_state.pop(k, None)
         with st.spinner("Agent 正在充当尽调律师核查数据，并出具法律意见... (约20~30秒)"):
             try:
                 # 拼接数据与文本
-                combined_data = "【基础数据表格】\n\n" + edited_df.to_markdown(index=False)
+                combined_data = ""
+                if use_default_table and edited_df is not None:
+                    combined_data += "【基础数据表格】\n\n" + edited_df.to_markdown(index=False)
+                
                 if extra_context.strip():
-                    combined_data += "\n\n\n【补充说明材料】\n\n" + extra_context.strip()
+                    combined_data += "\n\n\n【自行补充的业务资料/说明】\n\n" + extra_context.strip()
 
                 payload = {
                     "module_name": selected_module,
@@ -273,8 +286,35 @@ else:
                     tab1, tab2, tab3 = st.tabs(["📊 原始业务数据", "🔍 尽调核查底稿", "⚖️ 法律意见与评测档案"])
                     
                     with tab1:
-                        # 使用 st.markdown 直接渲染完整的输入数据内容（支持表格和文本混排展示）
-                        st.markdown(d["input_data"])
+                        raw_input = d.get("input_data", "")
+                        has_base = "【基础数据表格】" in raw_input
+                        has_supp = "【自行补充的业务资料/说明】" in raw_input
+                        
+                        if has_base or has_supp:
+                            parts = raw_input.split("【自行补充的业务资料/说明】")
+                            base_part = parts[0].replace("【基础数据表格】", "").strip()
+                            supp_part = parts[1].strip() if len(parts) > 1 else ""
+                            
+                            if has_base and base_part:
+                                st.markdown("##### 📌 基础数据表格")
+                                df = markdown_to_df(base_part)
+                                if not df.empty:
+                                    st.dataframe(df, use_container_width=True, hide_index=True)
+                                else:
+                                    st.markdown(base_part)
+                            
+                            if has_supp and supp_part:
+                                if has_base and base_part:
+                                    st.divider()
+                                st.markdown("##### 📝 补充业务资料 / 自由填充内容")
+                                st.info(supp_part)
+                        else:
+                            # 兼容历史老数据（纯表格或纯文本）
+                            df = markdown_to_df(raw_input)
+                            if not df.empty:
+                                st.dataframe(df, use_container_width=True, hide_index=True)
+                            else:
+                                st.markdown(raw_input)
                             
                     with tab2:
                         st.markdown("<div class='db-record-card'>" + d["analysis_reasoning"].replace('\n', '<br>') + "</div>", unsafe_allow_html=True)
